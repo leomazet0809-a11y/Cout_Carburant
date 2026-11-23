@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coût carburant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --field: #F1F5F9;
+    --line: #E2E8F0;
+    --ink: #0F172A;
+    --muted: #64748B;
+    --accent: #2563EB;
+    --error: #DC2626;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0F172A;
+      --surface: #1E293B;
+      --field: #273449;
+      --line: #334155;
+      --ink: #F1F5F9;
+      --muted: #94A3B8;
+      --accent: #60A5FA;
+      --error: #F87171;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F172A;
+    --surface: #1E293B;
+    --field: #273449;
+    --line: #334155;
+    --ink: #F1F5F9;
+    --muted: #94A3B8;
+    --accent: #60A5FA;
+    --error: #F87171;
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    font-feature-settings: "tnum" 1, "cv11" 1;
+  }
+
+  .app {
+    max-width: 34rem;
+    margin: 0 auto;
+    padding: clamp(1rem, 4vw, 2.5rem);
+  }
+  h1 {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    margin: 0 0 clamp(1rem, 3vw, 1.5rem);
+  }
+  .grid { display: grid; gap: 1rem; }
+  @media (min-width: 760px) {
+    .app { max-width: 60rem; }
+    .grid { grid-template-columns: 3fr 2fr; align-items: start; gap: 1.25rem; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+  h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.75rem;
+  }
+  .stack { display: grid; gap: 0.5rem; }
+
+  .field {
+    display: block;
+    background: var(--field);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 0.6rem 0.9rem 0.65rem;
+    cursor: text;
+  }
+  .field:focus-within { border-color: var(--accent); background: var(--surface); }
+  .field .label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .field .entry { display: flex; align-items: baseline; gap: 0.4rem; }
+  .field input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-size: 1.5rem;
+    line-height: 1.25;
+  }
+  .field input:focus { outline: none; }
+  .field input::placeholder { color: var(--muted); opacity: 0.5; }
+  .field .unit { color: var(--muted); font-weight: 500; white-space: nowrap; }
+
+  .field.big input { font-size: clamp(2rem, 9vw, 2.75rem); line-height: 1.15; }
+  .field.big .unit { font-size: 1.125rem; }
+  .field.is-computed input { color: var(--accent); }
+
+  .meta {
+    margin: 0.75rem 0 0;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+  .meta strong { color: var(--ink); font-weight: 600; }
+  .msg { margin: 0.75rem 0 0; font-size: 0.875rem; color: var(--error); }
+  .msg[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>Coût carburant</h1>
+
+  <div class="grid">
+    <section class="card" aria-label="Calcul">
+      <div class="stack">
+        <label class="field big" data-key="km">
+          <span class="label">Distance</span>
+          <span class="entry">
+            <input id="km" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" placeholder="0">
+            <span class="unit">km</span>
+          </span>
+        </label>
+        <label class="field big" data-key="cost">
+          <span class="label">Montant</span>
+          <span class="entry">
+            <input id="cost" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" placeholder="0">
+            <span class="unit">€</span>
+          </span>
+        </label>
+      </div>
+      <p class="meta">Volume : <strong id="liters">—</strong></p>
+      <p class="msg" id="msg" role="alert" hidden></p>
+    </section>
+
+    <section class="card" aria-labelledby="params-title">
+      <h2 id="params-title">Paramètres</h2>
+      <div class="stack">
+        <label class="field">
+          <span class="label">Consommation moyenne</span>
+          <span class="entry">
+            <input id="conso" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done">
+            <span class="unit">L/100 km</span>
+          </span>
+        </label>
+        <label class="field">
+          <span class="label">Prix du litre</span>
+          <span class="entry">
+            <input id="prix" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done">
+            <span class="unit">€/L</span>
+          </span>
+        </label>
+      </div>
+      <p class="meta">Coût au km : <strong id="perkm">—</strong></p>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var trip = { km: $('km'), cost: $('cost') };
+  var conso = $('conso'), prix = $('prix');
+  var liters = $('liters'), perkm = $('perkm'), msg = $('msg');
+  var KEY = 'cout-carburant:params';
+  var DEFAULTS = { conso: '4,3', prix: '2,40', km: '90' };
+  var source = 'km';
+
+  function parse(s) {
+    var t = String(s).replace(/[\s\u00A0\u202F]/g, '').replace(',', '.');
+    if (t === '') return null;
+    var n = Number(t);
+    return isFinite(n) ? n : NaN;
+  }
+  function fmt(n, max, min) {
+    return n.toLocaleString('fr-FR', { minimumFractionDigits: min, maximumFractionDigits: max, useGrouping: false });
+  }
+  function other() { return source === 'km' ? 'cost' : 'km'; }
+  function showMsg(text) {
+    msg.textContent = text || '';
+    msg.hidden = !text;
+  }
+  function reset() {
+    trip[other()].value = '';
+    liters.textContent = '—';
+  }
+
+  function update() {
+    document.querySelectorAll('.field[data-key]').forEach(function (f) {
+      f.classList.toggle('is-computed', f.dataset.key !== source);
+    });
+    var c = parse(conso.value), p = parse(prix.value);
+    if (!(c > 0) || !(p > 0)) {
+      perkm.textContent = '—';
+      reset();
+      showMsg('Renseignez une consommation et un prix du litre supérieurs à zéro.');
+      return;
+    }
+    var lPerKm = c / 100;
+    var ePerKm = lPerKm * p;
+    perkm.textContent = fmt(ePerKm, 3, 3) + ' €';
+
+    var v = parse(trip[source].value);
+    if (v === null) { reset(); showMsg(''); return; }
+    if (isNaN(v) || v < 0) {
+      reset();
+      showMsg('Saisissez un nombre positif, par exemple 90 ou 12,50.');
+      return;
+    }
+    showMsg('');
+    var km = source === 'km' ? v : v / ePerKm;
+    if (source === 'km') trip.cost.value = fmt(km * ePerKm, 2, 2);
+    else trip.km.value = fmt(km, 1, 0);
+    liters.textContent = fmt(km * lPerKm, 2, 2) + ' L';
+  }
+
+  function saveParams() {
+    try { localStorage.setItem(KEY, JSON.stringify({ conso: conso.value, prix: prix.value })); } catch (e) {}
+  }
+  function loadParams() {
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+    conso.value = saved && typeof saved.conso === 'string' ? saved.conso : DEFAULTS.conso;
+    prix.value = saved && typeof saved.prix === 'string' ? saved.prix : DEFAULTS.prix;
+  }
+  function selectOnFocus(el) {
+    el.addEventListener('focus', function () { setTimeout(function () { try { el.select(); } catch (e) {} }, 0); });
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter') el.blur(); });
+  }
+
+  Object.keys(trip).forEach(function (k) {
+    trip[k].addEventListener('input', function () { source = k; update(); });
+    selectOnFocus(trip[k]);
+  });
+  [conso, prix].forEach(function (el) {
+    el.addEventListener('input', function () { saveParams(); update(); });
+    selectOnFocus(el);
+  });
+
+  loadParams();
+  trip.km.value = DEFAULTS.km;
+  update();
+})();
+</script>
+</body>
+</html>
