@@ -4,50 +4,62 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Coût carburant</title>
+<meta name="theme-color" content="#FAFAFA">
+<script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('cout-carburant:theme'); } catch (e) {}
+    if (t !== 'light' && t !== 'dark') {
+      t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #F8FAFC;
+    --bg: #FAFAFA;
     --surface: #FFFFFF;
-    --field: #F1F5F9;
-    --line: #E2E8F0;
-    --ink: #0F172A;
-    --muted: #64748B;
+    --line: #E4E4E7;
+    --ink: #18181B;
+    --muted: #71717A;
+    --faint: #A1A1AA;
     --accent: #2563EB;
     --error: #DC2626;
-    box-sizing: border-box;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --ring: rgba(37, 99, 235, 0.18);
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #0F172A;
-      --surface: #1E293B;
-      --field: #273449;
-      --line: #334155;
-      --ink: #F1F5F9;
-      --muted: #94A3B8;
-      --accent: #60A5FA;
+      --bg: #0B0B0E;
+      --surface: #151519;
+      --line: #27272A;
+      --ink: #F4F4F5;
+      --muted: #A1A1AA;
+      --faint: #52525B;
+      --accent: #7AA2FF;
       --error: #F87171;
+      --ring: rgba(122, 162, 255, 0.22);
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #0F172A;
-    --surface: #1E293B;
-    --field: #273449;
-    --line: #334155;
-    --ink: #F1F5F9;
-    --muted: #94A3B8;
-    --accent: #60A5FA;
+    --bg: #0B0B0E;
+    --surface: #151519;
+    --line: #27272A;
+    --ink: #F4F4F5;
+    --muted: #A1A1AA;
+    --faint: #52525B;
+    --accent: #7AA2FF;
     --error: #F87171;
+    --ring: rgba(122, 162, 255, 0.22);
     color-scheme: dark;
   }
-  *, *::before, *::after { box-sizing: inherit; }
-  html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { height: 100%; }
   body {
     margin: 0;
     min-height: 100%;
@@ -57,58 +69,79 @@
     font-size: 1rem;
     line-height: 1.5;
     -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
     font-feature-settings: "tnum" 1, "cv11" 1;
+    transition: background-color .2s ease, color .2s ease;
   }
 
   .app {
-    max-width: 34rem;
+    max-width: 30rem;
     margin: 0 auto;
-    padding: clamp(1rem, 4vw, 2.5rem);
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 1rem)
+      max(1rem, env(safe-area-inset-right, 0px))
+      calc(env(safe-area-inset-bottom, 0px) + 2rem)
+      max(1rem, env(safe-area-inset-left, 0px));
+  }
+
+  /* En-tête */
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: clamp(1.5rem, 6vw, 2.5rem);
   }
   h1 {
-    font-size: clamp(1.5rem, 4vw, 2rem);
-    font-weight: 600;
-    letter-spacing: -0.025em;
-    line-height: 1.2;
-    margin: 0 0 clamp(1rem, 3vw, 1.5rem);
-  }
-  .grid { display: grid; gap: 1rem; }
-  @media (min-width: 760px) {
-    .app { max-width: 60rem; }
-    .grid { grid-template-columns: 3fr 2fr; align-items: start; gap: 1.25rem; }
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: clamp(1rem, 3vw, 1.5rem);
-  }
-  h2 {
-    font-size: 1rem;
+    margin: 0;
+    font-size: 1.0625rem;
     font-weight: 600;
     letter-spacing: -0.01em;
-    margin: 0 0 0.75rem;
   }
-  .stack { display: grid; gap: 0.5rem; }
+  .theme-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color .15s ease, background-color .2s ease;
+  }
+  .theme-btn:hover { border-color: var(--faint); }
+  .theme-btn:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--ring); border-color: var(--accent); }
+  .theme-btn svg { width: 1.125rem; height: 1.125rem; }
+  .theme-btn .i-sun { display: none; }
+  :root[data-theme="dark"] .theme-btn .i-sun { display: block; }
+  :root[data-theme="dark"] .theme-btn .i-moon { display: none; }
 
-  .field {
+  /* Calcul */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+  .row {
     display: block;
-    background: var(--field);
-    border: 2px solid transparent;
-    border-radius: 12px;
-    padding: 0.6rem 0.9rem 0.65rem;
+    padding: 1.1rem 1.25rem 1.2rem;
     cursor: text;
   }
-  .field:focus-within { border-color: var(--accent); background: var(--surface); }
-  .field .label {
+  .row + .row { border-top: 1px solid var(--line); }
+  .label {
     display: block;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     font-weight: 500;
     color: var(--muted);
+    transition: color .15s ease;
   }
-  .field .entry { display: flex; align-items: baseline; gap: 0.4rem; }
-  .field input {
+  .row:focus-within .label { color: var(--accent); }
+  .entry { display: flex; align-items: baseline; gap: 0.5rem; }
+  input {
     flex: 1;
     min-width: 0;
     width: 100%;
@@ -118,43 +151,87 @@
     color: var(--ink);
     font: inherit;
     font-weight: 600;
-    letter-spacing: -0.02em;
-    font-size: 1.5rem;
-    line-height: 1.25;
+    letter-spacing: -0.03em;
+    caret-color: var(--accent);
   }
-  .field input:focus { outline: none; }
-  .field input::placeholder { color: var(--muted); opacity: 0.5; }
-  .field .unit { color: var(--muted); font-weight: 500; white-space: nowrap; }
+  input:focus { outline: none; }
+  input::placeholder { color: var(--faint); }
+  .row input { font-size: clamp(2.25rem, 10vw, 3rem); line-height: 1.15; }
+  .unit { color: var(--muted); font-weight: 500; white-space: nowrap; }
+  .row .unit { font-size: 1.125rem; }
+  .row.is-computed input { color: var(--accent); }
 
-  .field.big input { font-size: clamp(2rem, 9vw, 2.75rem); line-height: 1.15; }
-  .field.big .unit { font-size: 1.125rem; }
-  .field.is-computed input { color: var(--accent); }
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1rem 0 0;
+    padding: 0 0.25rem;
+  }
+  .stats div { min-width: 0; }
+  .stats dt { font-size: 0.8125rem; color: var(--muted); }
+  .stats dd { margin: 0.1rem 0 0; font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; }
 
-  .meta {
-    margin: 0.75rem 0 0;
-    font-size: 0.875rem;
+  .msg { margin: 0.75rem 0 0; padding: 0 0.25rem; font-size: 0.875rem; color: var(--error); }
+  .msg[hidden] { display: none; }
+
+  /* Paramètres */
+  .params { margin-top: clamp(2rem, 7vw, 2.75rem); }
+  h2 {
+    margin: 0 0 0.75rem;
+    padding: 0 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--muted);
   }
-  .meta strong { color: var(--ink); font-weight: 600; }
-  .msg { margin: 0.75rem 0 0; font-size: 0.875rem; color: var(--error); }
-  .msg[hidden] { display: none; }
+  .params-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.75rem;
+  }
+  .field {
+    display: block;
+    padding: 0.7rem 0.9rem 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    cursor: text;
+    transition: border-color .15s ease, box-shadow .15s ease, background-color .2s ease;
+  }
+  .field:hover { border-color: var(--faint); }
+  .field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+  .field .label { font-size: 0.75rem; }
+  .field input { font-size: 1.25rem; line-height: 1.3; letter-spacing: -0.02em; }
+  .field .unit { font-size: 0.875rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
+  }
 </style>
 </head>
 <body>
-<main class="app">
-  <h1>Coût carburant</h1>
+<div class="app">
+  <header class="top">
+    <h1>Coût carburant</h1>
+    <button class="theme-btn" id="theme" type="button" aria-label="Activer le mode sombre">
+      <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z"/></svg>
+      <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+  </header>
 
-  <div class="grid">
-    <section class="card" aria-label="Calcul">
-      <div class="stack">
-        <label class="field big" data-key="km">
+  <main>
+    <section aria-label="Calcul">
+      <div class="panel">
+        <label class="row" data-key="km">
           <span class="label">Distance</span>
           <span class="entry">
             <input id="km" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" placeholder="0">
             <span class="unit">km</span>
           </span>
         </label>
-        <label class="field big" data-key="cost">
+        <label class="row" data-key="cost">
           <span class="label">Montant</span>
           <span class="entry">
             <input id="cost" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" placeholder="0">
@@ -162,13 +239,16 @@
           </span>
         </label>
       </div>
-      <p class="meta">Volume : <strong id="liters">—</strong></p>
+      <dl class="stats">
+        <div><dt>Volume</dt><dd id="liters">—</dd></div>
+        <div><dt>Coût au km</dt><dd id="perkm">—</dd></div>
+      </dl>
       <p class="msg" id="msg" role="alert" hidden></p>
     </section>
 
-    <section class="card" aria-labelledby="params-title">
+    <section class="params" aria-labelledby="params-title">
       <h2 id="params-title">Paramètres</h2>
-      <div class="stack">
+      <div class="params-grid">
         <label class="field">
           <span class="label">Consommation moyenne</span>
           <span class="entry">
@@ -184,14 +264,32 @@
           </span>
         </label>
       </div>
-      <p class="meta">Coût au km : <strong id="perkm">—</strong></p>
     </section>
-  </div>
-</main>
+  </main>
+</div>
 
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
+  var root = document.documentElement;
+
+  /* Thème clair / sombre */
+  var THEME_KEY = 'cout-carburant:theme';
+  var themeBtn = $('theme');
+  var themeMeta = document.querySelector('meta[name="theme-color"]');
+  function applyTheme(t) {
+    root.setAttribute('data-theme', t);
+    themeBtn.setAttribute('aria-label', t === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre');
+    themeMeta.setAttribute('content', t === 'dark' ? '#0B0B0E' : '#FAFAFA');
+  }
+  applyTheme(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+  themeBtn.addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  });
+
+  /* Calcul */
   var trip = { km: $('km'), cost: $('cost') };
   var conso = $('conso'), prix = $('prix');
   var liters = $('liters'), perkm = $('perkm'), msg = $('msg');
@@ -200,7 +298,7 @@
   var source = 'km';
 
   function parse(s) {
-    var t = String(s).replace(/[\s\u00A0\u202F]/g, '').replace(',', '.');
+    var t = String(s).replace(/[\s  ]/g, '').replace(',', '.');
     if (t === '') return null;
     var n = Number(t);
     return isFinite(n) ? n : NaN;
@@ -219,7 +317,7 @@
   }
 
   function update() {
-    document.querySelectorAll('.field[data-key]').forEach(function (f) {
+    document.querySelectorAll('.row[data-key]').forEach(function (f) {
       f.classList.toggle('is-computed', f.dataset.key !== source);
     });
     var c = parse(conso.value), p = parse(prix.value);
